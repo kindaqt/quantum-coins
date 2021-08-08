@@ -13,50 +13,34 @@ from qiskit.tools.visualization import plot_histogram, plot_state_city
 # }
 
 """
-steps = []
-step = flip | touch | land
-steps = [
-    { 
-        type: "flip"
-    },
-    {
-        type: "touch",
-        options: [ 0, 1 ] # coins you want to touch
-    },
-    {
-        type: "land"
-    }
-]
-
 request.data = {
-    coins: [ "heads", "tails" ], #Array<str:["heads","tails"]>
-    steps: [{ 
-        type: "flip",
-        options: {
-            coins: [ 0, 1 ] #Array of ints such that each element maps to a coin in the coins array
-        }
+    "coins": [ "heads", "tails", "sides" ]>
+    "steps": [{ 
+        "type": "flip",
+        "coins": [ 0, 1, 2 ] #Array of ints such that each element maps to a coin in the coins array
     }, { 
-        type: "touch",
-        options: {
-            coins: [ 0, 1 ] #Array of ints such that each element maps to a coin in the coins array
-        }
+        "type": "touch",
+        "coins": [ 0, 1 ] #Array of ints such that each element maps to a coin in the coins array
     }, {
-        type: "land",
-        options: {
-            coins: [ 0, 1 ] #Array of ints such that each element maps to a coin in the coins array
-        }
+        "type": "land",
+        "coins": [ 0, 1, 2 ] #Array of ints such that each element maps to a coin in the coins array
     }]
 }
 """
 
 
 class Game:
-    def __init__(self, coins, steps, simulator='statevector'):
-        logging.info(f"initializing coins {coins}")
-
-        self._coins = coins
-        self._steps = steps
+    def __init__(self, coins=None, steps=None, simulator='statevector'):
+        print(
+            "+---------------------------------------------------------------------+\n", 
+            "| Hello and welcome to the quantum realm where spooky actions abound! |\n",
+            "+---------------------------------------------------------------------+\n", 
+        )
+        logging.info(f"initializing game coins={coins} steps={steps} simulator={simulator}")
+        self._coins = coins or []
+        self._steps = steps or []
         self._simulator = AerSimulator(method=simulator)
+        logging.info(f"initializing game coins={coins} steps={steps} simulator={simulator}")
 
     def setup(self):
         self._setup_circuit()
@@ -64,26 +48,27 @@ class Game:
         self._setup_steps()
 
     def _setup_circuit(self):
-        n_coins = len(self._coins)
+        n_coins = len(self.coins)
         self._qc = QuantumCircuit(n_coins, n_coins)
 
     def _setup_states(self):
-        coins = self._coins
         qc = self._qc
 
         # Initialize circuit based on coin states
-        for i in range(len(coins)):
-            type = coins[i]
-            logging.info(f"finding initial state of coin={i} type={type}")
-            if type == 'heads':
-                state = [0, 1]  # label: 1
-            elif type == 'tails':
-                type = [1, 0]  # label: 0
-            # TODO: unknown state in superposition
-            else:
-                raise Exception(f"invalid state coin={i} type={type}")
+        for i in range(len(self.coins)):
+            coin_type = self.coins[i]
+            logging.info(f"finding initial state of coin={i} type={coin_type}")
 
-            logging.info(f"initial state coin={i} type={type}")
+            if coin_type == 'heads':
+                state = [0, 1]  # label: 1
+            elif coin_type == 'tails':
+                state = [1, 0]  # label: 0
+            elif coin_type == 'sides':
+                state = [.5, .5] # label: + or -
+            else:
+                raise Exception(f"invalid state coin={i} type={coin_type}")
+
+            logging.info(f"initial state coin={i} type={coin_type}")
             qc.initialize(state, i)
         qc.barrier()
 
@@ -99,14 +84,30 @@ class Game:
             logging.info(f"setting up step={step}")
             step_type = step["type"]
             if step_type == 'flip':
-                self.flip(step["options"]["coins"])
+                self.flip(step["coins"])
             elif step_type == 'touch':
-                coins = step["options"]["coins"]
+                coins = step["coins"]
                 self.touch(coins[0], coins[1])
             elif step_type == 'land':
-                self.land(step["options"]["coins"])
+                self.land(step["coins"])
             else:
                 raise Exception(f"invalid step of {step}")
+
+    def get_coins(self):
+        return self._coins
+    def set_coins(self, coins):
+        self._coins = coins
+    def del_coins(self):
+        del self._coins
+    coins = property(get_coins, set_coins, del_coins)
+
+    def get_steps(self):
+        return self._steps
+    def set_steps(self, steps):
+        self._steps = steps
+    def del_steps(self):
+        del self._steps
+    steps = property(get_steps, set_steps, del_steps)
 
     def flip(self, coins):
         for coin in coins:
@@ -143,11 +144,11 @@ class Game:
         self._result = result
         return self._result
 
-    def result(self):
-        result = self._result
-        statevector = result.get_statevector()
+    def get_result(self):
+        statevector = self._result.get_statevector()
         statevector_plot_state_city = plot_state_city(statevector, title='Bell State')
-        counts = result.get_counts()
+        counts = self._result.get_counts()
         counts_plot_histogram = plot_histogram(counts, title='Bell State Counts')
 
-        return result, statevector, statevector_plot_state_city, counts, counts_plot_histogram
+        return self._result, statevector, statevector_plot_state_city, counts, counts_plot_histogram
+    result = property(get_result)

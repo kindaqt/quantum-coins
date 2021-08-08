@@ -1,59 +1,44 @@
-from coins.main import Game
+from libs.coins.main import Game
 import unittest
-import coins
-import pprint
+
+class TestGame(unittest.TestCase):
+
+    def test_scenario(self):
+        game = Game()
+        game.coins = ["heads", "tails", "sides"]
+        print(game.coins)
+        del game.coins[0]
+        print(game.coins)
+        game.coins[0] = "basdf"
+        print(game.coins)
+        # game.coins.set(["heads", "tails", "sides"])
 
 
-class TestCoins(unittest.TestCase):
+        # print("coins =", game.coins.get_all())
 
-    def test_init(self):
-        test_coins = ["heads", "tails"]
-        test_steps = [
-            {
-                "type": "flip",
-                "options": {
-                    "coins": [0, 1]
-                }
-            }, 
-            {
-                "type": "touch",
-                "options": {
-                    "coins": [0, 1]
-                }
-            }, 
-            {
-                "type": "land",
-                "options": {
-                    "coins": [0, 1]
-                }
-            }
-        ]
-
-        game_1 = Game(test_coins, test_steps)
-        game_1.setup()
-        game_1.play()
-        
-        print(game_1.result())
-
-    # def test__init__(self):
-    #     test_coins = [
-    #         {'initial_state': 'heads'},
-    #         {'initial_state': 'tails'}
+    # def test_init(self):
+    #     test_coins = ["heads", "tails"]
+    #     test_steps = [
+    #         {
+    #             "type": "flip",
+    #             "coins": [0, 1]
+    #         },
+    #         {
+    #             "type": "touch",
+    #             "coins": [0, 1]
+    #         },
+    #         {
+    #             "type": "land",
+    #             "coins": [0, 1]
+    #         }
     #     ]
-    #     coins_instance = Coins(test_coins)
 
-    #     print(coins_instance.draw())
+    #     game_1 = Game(test_coins, test_steps)
+    #     game_1.setup()
+    #     game_1.play()
 
-    #     coins_instance.flip([0,1])
-    #     # coins_instance.touch(0,1)
-    #     coins_instance.land([0,1])
+    #     print(game_1.result())
 
-    #     print(coins_instance.draw())
-
-    #     coins_instance.run(shots=10, memory=False)
-    #     print('!!! result=', coins_instance.result)
-
-    #     print('!!! results=', coins_instance.results.get(statevector=True, counts=True))
 
     # def test_init_circuit():
     #     return
