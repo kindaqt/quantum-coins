@@ -5,13 +5,21 @@ class TestGame(unittest.TestCase):
 
     def test_scenario(self):
         game = Game()
-        game.coins = ["heads", "tails", "sides"]
+        game.coins = ["heads", "tails"]
         print(game.coins)
-        del game.coins[0]
+        # del game.coins[0]
         print(game.coins)
-        game.coins[0] = "basdf"
+        # game.coins[0] = "basdf"
         print(game.coins)
         # game.coins.set(["heads", "tails", "sides"])
+
+        game.add_step("flip", [0,1])
+        print(game.steps)
+
+        game.setup()
+        game.play()
+        print(game.result)
+
 
 
         # print("coins =", game.coins.get_all())

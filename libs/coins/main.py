@@ -32,9 +32,9 @@ request.data = {
 class Game:
     def __init__(self, coins=None, steps=None, simulator='statevector'):
         print(
-            "+---------------------------------------------------------------------+\n", 
-            "| Hello and welcome to the quantum realm where spooky actions abound! |\n",
-            "+---------------------------------------------------------------------+\n", 
+            "\n+-----------------------------------------------------------------------+", 
+            "\n| Hello! And welcome to the quantum realm! Where spooky actions abound. |",
+            "\n+-----------------------------------------------------------------------+\n", 
         )
         logging.info(f"initializing game coins={coins} steps={steps} simulator={simulator}")
         self._coins = coins or []
@@ -49,11 +49,10 @@ class Game:
 
     def _setup_circuit(self):
         n_coins = len(self.coins)
+        print(f"!!! n_coins={n_coins}")
         self._qc = QuantumCircuit(n_coins, n_coins)
 
     def _setup_states(self):
-        qc = self._qc
-
         # Initialize circuit based on coin states
         for i in range(len(self.coins)):
             coin_type = self.coins[i]
@@ -64,16 +63,13 @@ class Game:
             elif coin_type == 'tails':
                 state = [1, 0]  # label: 0
             elif coin_type == 'sides':
-                state = [.5, .5] # label: + or -
+                state = [0.5, 0.5] # label: + or -
             else:
                 raise Exception(f"invalid state coin={i} type={coin_type}")
 
             logging.info(f"initial state coin={i} type={coin_type}")
-            qc.initialize(state, i)
-        qc.barrier()
-
-        # Assign circuit
-        self._qc = qc
+            self._qc.initialize(state, i)
+        self._qc.barrier()
 
     def _setup_steps(self):
         steps = self._steps
@@ -107,13 +103,23 @@ class Game:
         self._steps = steps
     def del_steps(self):
         del self._steps
+    def add_step(self, type, coins):
+        self._steps.append({
+            'type': type,
+            'coins': coins
+        })
     steps = property(get_steps, set_steps, del_steps)
 
+    #####################################
+    # Actions
+    #####################################
+ 
     def flip(self, coins):
         for coin in coins:
+            print(f"!!! COIN={coin}")
             self._qc.h(coin)
         self._qc.barrier()
-
+    
     def touch(self, control, target):
         """
         Simulates two quantum coins touching. When the coins are in superpostition they become entangled. When the coins are not in superposition they do not become entangled.
@@ -144,6 +150,33 @@ class Game:
         self._result = result
         return self._result
 
+    #############################
+    # Validation
+    #############################
+
+    def validate(self):
+        self.validate_coins()
+
+    def validate_coins(self):
+        valid_coins = ["heads", "tails", "sides"]
+        for coin in self._coins:
+            if coin not in valid_coins:
+                raise Exception(f"invalid coin state: coin={coin} valid_states={valid_coins}")
+
+    def validate_steps(self):
+        valid_step_types = ["flip", "touch", "land"]
+        for step in self._steps:
+            step_type = step["type"]
+            if step_type not in valid_step_types:
+                raise Exception(f"invalid step type: type={step_type} valid_types={valid_step_types}")
+            
+            coins = step["coins"]
+            if step_type == 'touch':
+                ''' Check if given list contains any duplicates '''
+                if len(coins) != len(set(coins)):
+                    raise Exception(f"invalid step coins: a coin can't touch itself")
+            
+
     def get_result(self):
         statevector = self._result.get_statevector()
         statevector_plot_state_city = plot_state_city(statevector, title='Bell State')
@@ -152,3 +185,5 @@ class Game:
 
         return self._result, statevector, statevector_plot_state_city, counts, counts_plot_histogram
     result = property(get_result)
+
+
